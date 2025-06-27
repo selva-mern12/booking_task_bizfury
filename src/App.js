@@ -18,11 +18,13 @@ const generateSeats = () => {
 
 function App() {
   const [seats, setSeats] = useState(generateSeats());
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedSeat, setSelectedSeat] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSeatClick = (id) => {
-    setSelectedSeat(id === selectedSeat ? null : id);
+    setSelectedSeat(prev =>
+      prev.includes(id) ? prev.filter(seat => seat !== id) : [...prev, id]
+    );
   };
 
   const bookingPriority = [
@@ -46,12 +48,14 @@ function App() {
       return;
     }
 
-    if (selectedSeat) {
-      const index = seats.findIndex((s) => s.id === selectedSeat);
-      if (!updatedSeats[index].booked) {
-        updatedSeats[index].booked = true;
-        setSeats(updatedSeats);
-      }
+    if (selectedSeat.length > 0) {
+      selectedSeat.forEach( id => {
+        const index = updatedSeats.findIndex(s => s.id === id);
+        if (index !== -1 && !updatedSeats[index].booked) {
+          updatedSeats[index].booked = true;
+          setSeats(updatedSeats)
+        }
+      })
     } else {
       for (let pref of bookingPriority) {
         for (let i = 0; i < updatedSeats.length; i++) {
@@ -65,7 +69,7 @@ function App() {
       }
     }
 
-    setSelectedSeat(null);
+    setSelectedSeat([]);
   };
 
   return (
@@ -82,7 +86,7 @@ function App() {
                 .map((seat) => (
                   <div
                     key={seat.id}
-                    className={`seat ${seat.booked ? "booked" : ""} ${selectedSeat === seat.id ? "selected" : ""}`}
+                    className={`seat ${seat.booked ? "booked" : ""} ${selectedSeat.includes(seat.id) ? "selected" : ""}`}
                     onClick={() => !seat.booked && handleSeatClick(seat.id)}
                   >
                     {seat.id}
@@ -97,7 +101,7 @@ function App() {
                 .map((seat) => (
                   <div
                     key={seat.id}
-                    className={`seat ${seat.booked ? "booked" : ""} ${selectedSeat === seat.id ? "selected" : ""}`}
+                    className={`seat ${seat.booked ? "booked" : ""} ${selectedSeat.includes(seat.id) ? "selected" : ""}`}
                     onClick={() => !seat.booked && handleSeatClick(seat.id)}
                   >
                     {seat.id}
@@ -110,6 +114,11 @@ function App() {
           {errorMsg && <p className="error">{errorMsg}</p>}
           <button onClick={handleBook}>Book</button>
         </div>
+      </div>
+      <div className="info">
+        <p>Available seats</p>
+        <p>Selected seats</p>
+        <p>Booked seats</p>
       </div>
     </>
   );
